@@ -1,104 +1,27 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- <link rel="stylesheet" href="main.css"> -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.6.347/pdf.min.js"></script>
+  <meta charset="UTF-8">
+  <title>Extractor de PDF de Laboratorio</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.6.347/pdf.min.js"></script>
     <link rel="icon" type="image/png" href="icon-1.png">
-    <script src="index.js"></script>
-    <title>lector</title>
-    
+  <link rel="stylesheet" href="main.css">
 </head>
 <body>
-    <div class="container-fluid">
-       <nav class="navbar navbar-expand-sm bg-dark navbar-dark text-white sticky-top" style="width: 100%">
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#collapsibleNavbar">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="collapsibleNavbar">
-                <ul class="nav nav-pills navbar-dark bg-dark" >
-                    <li class="nav-item"><a class="nav-link active" data-bs-toggle="pill" href="#lector">
-                        Lector lab
-                    </a></li>
-                    <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#propina">
-                        Aportes y contacto
-                    </a></li>
-                   
-                </ul>
-            </div>
-       </nav>
-    
-        <!-- Tab panes -->
-        <div class="tab-content">
-            <div class="tab-pane container active" id="lector">
-                <div class="container">
-                    <div class="row">
+  <div class="container">
+    <h1>📄 Extractor de Resultados de Laboratorio</h1>
 
-                        <div class="col-md">
-                            <h1>Lector lab HEGC</h1>
-                            <textarea  id="pdfUrl" cols="30" rows="3" style="border: 4px solid #2c6efa; background-color: #cefdfe; box-shadow:0 0 20px #94ae01; font-size: 20pt;" placeholder="Copie link del pdf del lab aquí"></textarea>
-                            <br>
-                            <button id="boton" onclick="extractTextFromPDF()">
-                                Click aquí para leer pdf
-                            </button>
-                            <br>
-                            <textarea  id="outputDiv" cols="50" rows="10" placeholder="Aquí aparecerán los resultados"></textarea><br><br>
-                            <a href="https://www.buymeacoffee.com/sanmartindx" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
-                        </div>
-                        <div class="col-sm">
-                            <h1>Instrucciones</h1>
-                            <ol style="border: 4px solid #2c6efa">
-                                <li>Copia el link del pdf obtenido por dedalus en el cuadro de texto que dice "Copie link del pdf del lab aquí"</li>
-                                <li>Presiona el botón "Click aquí para leer pdf"</li>
-                                <li>Copia el texto que aparecerá en el cuadro de texto grande (no olvides revisar por si hay errores)</li>
-                            </ol>
-                            <p>
-                                En caso de desear agregar algún examen que no se copia y suele necesitarlo, o tener alguna <b><span style="color:rgb(201, 245, 176); background-color:#079756; font-size: 18pt;">sugerencia</span></b>, 
-                                haga click en la pestaña <b><span style="color:#f8ff96; background-color: #004d1d; font-size: 18pt;">"Aportes y contacto"</span></b> en la barra superior para contactar, haré lo que pueda para incluirlo<br><br>
-                                De momento <b><span class="highlight" style="color:#e8eda2; background-color:#3f8fff;"> solo extrae texto de 1 pdf </span></b> (los exámenes obtenidos sobrescriben el cuadro de texto), 
-                                tal vez más adelante lo actualice para que se puedan extraer varios y el texto se copie a continuación, 
-                                sin sobrescribir. <br><br>
-                                Tampoco copia exámenes de <b><span style="color:#eabeff; background-color:#b90707;">orina, LCR, líquido pleural, cultivos u otros fluidos</span></b>, 
-                                si ingresa un pdf que contenga estos exámenes, el programa <b><span style="color:#eabeff; background-color:#b90707;">puede cometer errores</span></b>. <br><br>
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-            <div class="tab-pane container" id="propina">
-                <p> 
-                    <br>
-                    Este es un programita gratis open access no pay-to-win, su <b><span style="color:#34429d">propina</span></b> es mi sueldo. Se reciben aportes voluntarios si le es útil el programa <br>
-                    Se acepta propina monetaria, chocolates, café, o lo que se le venga a la mente <br>
-                    En caso de encontrar <b><span style="color:#b43c3c">errores</span></b>, o tener <b><span style="color:#007c38">sugerencias</span></b>, por favor contactar al correo <br>
-                    Si hay algún examen que no se copia y suele necesitarlo, también contactar al correo <br>
-
-                </p>
-                <a style="font-size: 40pt; text-align: center;" href="https://drive.google.com/file/d/1AQPVmnoVY6ZDJ2F7SRbqFCaoce8acI64/view?usp=sharing">info propinas y contacto click aquíiii</a>
-                <br>
-                <br>
-                <p>
-                    contacto: 
-                    <a href="mailto:sanmartin.danny@gmail.com">sanmartin.danny@gmail.com</a>
-                </p>
-            </div>
-        </div>
-
+    <div id="pdfForm" class="form">
+      <label for="pdfUrl">Ingresa la URL del PDF:</label>
+      <input type="text" id="pdfUrl" placeholder="https://ejemplo.com/archivo.pdf" required>
+      <button id="boton" onclick="extractTextFromPDF()">Extraer</button>
     </div>
-            <div style="display: flex; 
-    position: absolute; bottom: 0; right: 0; padding: 0px; height: 150px; background: #1cff86; border-radius: 5px;" class="only-desktop"
-    >
-        <p style="width: 175px; padding: 5px 5px 0px 5px; margin: 0px; color: rgb(0, 0, 0); font-size: 12pt; align-self: center;
-        "><b>Si te fue útil, apóyame </b> con un cafecito en el siguiente código QR 🙂 </p>
-        <p style="width: 30px; padding: 0px; margin: 0px; color: rgb(0, 0, 0); font-size: 20pt; 
-        align-self: center;  "
-        >→</p>
-        <img src="qr.png" style="height: 150px !important;width: 150px !important;">
 
-    </div>
+    <textarea id="outputDiv" class="output">
+
+    </textarea>
+  </div>
+
+  <script src="index.js"></script>
 </body>
 </html>
