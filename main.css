@@ -7,12 +7,18 @@ body {
 }
 
 .container {
-  max-width: 700px;
-  margin: 50px auto;
+  
   padding: 30px;
-  background: white;
+  margin: 0 auto 0 2.5%;
+  background: #6dff9975;
   border-radius: 12px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.07);
+  z-index: 10;
+}
+.container-master{
+    padding: 30px;
+    display: flex;
+
 }
 
 h1 {
@@ -77,4 +83,11 @@ button:hover {
   border: 1px solid #ddd;
   width: 90%;
   height: 40ch;
+}
+img {
+    z-index: -1;
+  position: fixed;
+  opacity: 0.5;
+  width: 100%;
+  height: auto;
 }
