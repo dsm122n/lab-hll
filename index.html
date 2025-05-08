@@ -18,14 +18,17 @@
                 <label for="pdfUrl">Ingresa la URL del PDF:</label>
                 <input type="text" id="pdfUrl" placeholder="https://ejemplo.com/archivo.pdf" required>
                 <button id="boton" onclick="extractTextFromPDF()">Do or do not, there is no try</button>
+                <input type="file" name="pdfFile" id="pdfFile" class="file-input" accept=".pdf">
+                <button onclick="uploadPDF()">Upload PDF</button>
                 </div>
         
                 <textarea id="outputDiv" class="output">
         
                 </textarea>
              </div>
-
-        </div>
+             
+             <div id="dropOverlay" class="drop-overlay">📄 Suelta aquí tu archivo PDF</div>
+            </div>
 
   <script src="index.js"></script>
 </body>

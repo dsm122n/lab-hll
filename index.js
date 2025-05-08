@@ -1,372 +1,224 @@
-
 class diaExamen {
     constructor(fecha, hora){
         this.fecha = fecha;
         this.hora = hora;
         this.hemograma = {
-            Hb: null,
-            Hto: null,
-            VCM: null,
-            CHCM: null,
-            Leucocitos: null,
-            Segmentados: null,
-            RAN: null,
-            Linfocitos: null,
-            RAL: null,
-            Plaquetas: null
+            Hb: null, Hto: null, VCM: null, CHCM: null,
+            Leucocitos: null, Segmentados: null, RAN: null,
+            Linfocitos: null, RAL: null, Plaquetas: null
         };
-        //this.gases = {
-        //    
-        //    pH: null,
-        //    pCO2: null,
-        //    pO2: null,
-        //    HCO3: null,
-        //    EB: null,
-        //    SatO2: null
-        // };
         this.electrolitos = {
-            Na: null,
-            K: null,
-            Cl: null,
-            Ca: null,
-            P: null,
-            Mg: null
+            Na: null, K: null, Cl: null, Ca: null, P: null, Mg: null
         };
-
         this.funcionHepatica = {
-            GOT: null,
-            GPT: null,
-            GGT: null,
-            FA: null,
-            BiliT: null,
-            BiliD: null,
-            Proteinas: null,
-            Albumina: null
+            GOT: null, GPT: null, GGT: null, FA: null,
+            BiliT: null, BiliD: null, Proteinas: null, Albumina: null
         };
         this.coagulacion = {
-            TTPK: null,
-            TP: null,
-            INR: null
+            TTPK: null, TP: null, INR: null
         };
         this.funcionRenal = {
-            //Urea: null,
-            BUN: null,
-            Crea: null,
-            AcUrico: null
+            BUN: null, Crea: null, AcUrico: null
         };
         this.otros = {
-            LDH: null,
-            PCR: null,
-            Glucosa: null,
-            TSH: null,
-            T4L: null
+            LDH: null, PCR: null, Glucosa: null, TSH: null, T4L: null
         };
-    
-
-
     }
-
 }
+
 const nombresExamenes = ["HEMOGLOBINA", "HEMATOCRITO", "V.C.M", "C.H.C.M", "RCTO. DE PLAQUETAS", "LEUCOCITOS", "RAN", "SEGMENTADO", "LINFOCITOS ", 
-    //"pH", "pCO2", "pO2", "EXCESO DE BASE", "HCO3", "HCO3 st", 
-    "SODIO", "POTASIO", "CLORO", "CALCIO IONICO", 
-    "FOSFORO", "MAGNESIO", "CREATININA, sangre", "NITROGENO UREICO", "LDH", 
-    "PROTEINA C REACTIVA", "% ACTIV. DE PROTROMBINA", "INR", "TTPK",
-    "BILIRRUBINA TOTAL", "BILIRRUBINA DIRECTA", "PROTEINAS TOTALES", "ALBUMINA", "GGT", "FOSFATASA ALCALINA", "GPT", "GOT",
+    "SODIO", "POTASIO", "CLORO", "CALCIO IONICO", "FOSFORO", "MAGNESIO", "CREATININA, sangre", "NITROGENO UREICO", "LDH", 
+    "PROTEINA C REACTIVA", "% ACTIV. DE PROTROMBINA", "INR", "TTPK", "BILIRRUBINA TOTAL", "BILIRRUBINA DIRECTA",
+    "PROTEINAS TOTALES", "ALBUMINA", "GGT", "FOSFATASA ALCALINA", "GPT", "GOT",
     "HORMONA TIROESTIMULANTE (TSH)", "TIROXINA LIBRE: T4L"
 ];
 
-
-
-function extractTextFromPDF() {
-
-
+// Process PDF and extract lab values
+function processPDF(pdf) {
+    let textArray = [];
     
-    // Asynchronously load the PDF file
-    const pdfUrl = document.getElementById("pdfUrl").value;
-    //console.log(typeof(pdfUrl));
-    //console.log(pdfUrl);
-
-    // const loadingTask = pdfjsLib.getDocument(pdfUrl);
-    const loadingTask = pdfjsLib.getDocument(pdfUrl);
+    // Create array of promises for all pages
+    const pagePromises = Array.from({ length: pdf.numPages }, (_, i) => {
+        return pdf.getPage(i + 1).then(page => 
+            page.getTextContent().then(content => 
+                content.items.map(item => item.str)
+            )
+        );
+    });
     
-    loadingTask.promise.then(function (pdf) {
-      // Initialize an array to hold the text from each page
-        let textArray = [];
-  
-        // Iterate through each page of the PDF
-        for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-            pdf.getPage(pageNum).then(function (page) {
-            // Extract text content from the page
-                page.getTextContent().then(function (textContent) {
-                    const pageText = [];
-
-                    // Iterate through the text content items
-                    for (const item of textContent.items) {
-                        pageText.push(item.str);
+    // Process all pages at once
+    return Promise.all(pagePromises).then(pages => {
+        textArray = pages;
+        
+        // Create and populate lab results object
+        let labDia = new diaExamen(
+            textArray[0][13].substring(0, 10),
+            textArray[0][13].substring(11, 16)
+        );
+        
+        // Parse date and time
+        const [day, month, year] = labDia.fecha.split('/');
+        const dateObject = new Date(`${month}/${day}/${year}`);
+        const [hours, minutes] = labDia.hora.split(':');
+        dateObject.setHours(parseInt(hours), parseInt(minutes));
+        labDia.fecha = dateObject;
+        
+        // Extract lab values from text
+        textArray.forEach(page => {
+            page.forEach((text, k) => {
+                nombresExamenes.forEach(examName => {
+                    const elementWithoutSpaces = text.replace(/\s*/, '');
+                    if (elementWithoutSpaces !== examName) return;
+                    
+                    const valueIndex = k - 3;
+                    const valueIndex2 = k - 2;
+                    const valueIndexSegmentados = k + 21;
+                    const valueIndexLinfocitos = k + 20;
+                    
+                    if (valueIndex < 0 || page[valueIndex] === "Valor Referencia" || page[valueIndex] === "null") return;
+                    
+                    const value = page[valueIndex];
+                    console.log(`Para el examen ${examName} en la posición ${k} el valor es ${value}`);
+                    
+                    // Map exam name to object property
+                    switch (examName) {
+                        case "HEMOGLOBINA": labDia.hemograma.Hb = value; break;
+                        case "HEMATOCRITO": labDia.hemograma.Hto = value; break;
+                        case "V.C.M": labDia.hemograma.VCM = value; break;
+                        case "C.H.C.M": labDia.hemograma.CHCM = value; break;
+                        case "RCTO. DE PLAQUETAS": labDia.hemograma.Plaquetas = value; break;
+                        case "LEUCOCITOS": labDia.hemograma.Leucocitos = value; break;
+                        case "RAN": labDia.hemograma.RAN = value; break;
+                        case "SEGMENTADO": labDia.hemograma.Segmentados = page[valueIndexSegmentados]; break;
+                        case "LINFOCITOS ": labDia.hemograma.Linfocitos = page[valueIndexLinfocitos]; break;
+                        case "SODIO": labDia.electrolitos.Na = value; break;
+                        case "POTASIO": labDia.electrolitos.K = value; break;
+                        case "CLORO": labDia.electrolitos.Cl = value; break;
+                        case "CALCIO IONICO": labDia.electrolitos.Ca = value; break;
+                        case "FOSFORO": labDia.electrolitos.P = value; break;
+                        case "MAGNESIO": labDia.electrolitos.Mg = value; break;
+                        case "CREATININA, sangre": labDia.funcionRenal.Crea = value; break;
+                        case "NITROGENO UREICO": labDia.funcionRenal.BUN = value; break;
+                        case "LDH": labDia.otros.LDH = value; break;
+                        case "PROTEINA C REACTIVA": labDia.otros.PCR = value; break;
+                        case "TTPK": labDia.coagulacion.TTPK = value; break;
+                        case "% ACTIV. DE PROTROMBINA": labDia.coagulacion.TP = value; break;
+                        case "INR": labDia.coagulacion.INR = page[valueIndex2]; break;
+                        case "BILIRRUBINA TOTAL": labDia.funcionHepatica.BiliT = value; break;
+                        case "BILIRRUBINA DIRECTA": labDia.funcionHepatica.BiliD = value; break;
+                        case "PROTEINAS TOTALES": labDia.funcionHepatica.Proteinas = value; break;
+                        case "ALBUMINA": labDia.funcionHepatica.Albumina = value; break;
+                        case "GGT": labDia.funcionHepatica.GGT = value; break;
+                        case "FOSFATASA ALCALINA": labDia.funcionHepatica.FA = value; break;
+                        case "GPT": labDia.funcionHepatica.GPT = value; break;
+                        case "GOT": labDia.funcionHepatica.GOT = value; break;
+                        case "HORMONA TIROESTIMULANTE (TSH)": labDia.otros.TSH = value; break;
+                        case "TIROXINA LIBRE: T4L": labDia.otros.T4L = value; break;
                     }
-                    textArray.push(pageText);
-                    
-                    // Join the text content from this page into a single string
-                    // const pageTextString = pageText.join(" ");
-                    //console.log("el array de textos es: \n");
-                    //console.log(textArray);
-                    
-                    return textArray;
-                })
-                .then(function (textArray) {
-                        console.log("el array de textos en el siguiente .then() es: \n");
-                        console.log(textArray);
-                        let labDia = new diaExamen(textArray[0][13].substring(0, 10),textArray[0][13].substring(11, 16));
-                        
-                        //console.log("FECHAAAA " + labDia.fecha);
-                        //console.log("horaaaaa " + labDia.hora);
-                        let dateString = labDia.fecha;
-                        let [day, month, year] = dateString.split('/');
-
-                        // Ensure the components are in the correct order (DD/MM/YYYY)
-                        let dateObject = new Date(`${month}/${day}/${year}`);
-                        //console.log(dateObject);
-                        let timeString = labDia.hora;
-                        let [hours, minutes] = timeString.split(':');
-
-                        // Set the time components to the Date object
-                        dateObject.setHours(parseInt(hours, 10), parseInt(minutes, 10));
-                        labDia.fecha = dateObject;
-
-                        //console.log("largo de:" + textArray[0][1].length);
-
-                        for (let i = 0; i < textArray.length; i++) {
-
-                            for (let k = 0; k < textArray[i].length; k++) {
-                                for (let j = 0; j < nombresExamenes.length; j++) {
-                                    //console.log(textArray[1][k]);
-                                    // console.log("i es " + i + ", k es " + k + " y j es " + j);
-                                    ////////////// aquí añadir el /\s asterisco antes del /
-                                    const elementWithoutSpaces = textArray[i][k].replace(/\s*/, '');
-                                    let valueIndex = k - 3;
-                                    let valueIndex2 = k - 2;
-                                    let valueIndexSegmentados = k + 21;
-                                    let valueIndexLinfocitos = k + 20
-
-                        
-                        
-                                    if (elementWithoutSpaces == nombresExamenes[j] && (textArray[i][valueIndex] != "Valor Referencia" ) && (textArray[i][valueIndex] != "null")) {
-                                        // Check if the element matches the exam name
-
-                                        if (valueIndex < textArray[i].length ) {
-                                            console.log("Para el examen " + nombresExamenes[j] + " en la posición " + k + " el valor pre3 es " + textArray[i][valueIndex]);
-                                            switch (nombresExamenes[j]) {
-                                                case "HEMOGLOBINA":
-                                                    labDia.hemograma.Hb = textArray[i][valueIndex];
-                                                    break;
-                                                case "HEMATOCRITO":
-                                                    labDia.hemograma.Hto = textArray[i][valueIndex];
-                                                    break;
-                                                case "V.C.M":
-                                                    labDia.hemograma.VCM = textArray[i][valueIndex];
-                                                    break;
-                                                case "C.H.C.M":
-                                                    labDia.hemograma.CHCM = textArray[i][valueIndex];
-                                                    break;
-                                                case "RCTO. DE PLAQUETAS":
-                                                    labDia.hemograma.Plaquetas = textArray[i][valueIndex];
-                                                    break;
-                                                case "LEUCOCITOS":
-                                                    labDia.hemograma.Leucocitos = textArray[i][valueIndex];
-                                                    break;
-                                                case "RAN":
-                                                    labDia.hemograma.RAN = textArray[i][valueIndex];
-                                                    break;
-                                                case "SEGMENTADO":
-                                                    labDia.hemograma.Segmentados = textArray[i][valueIndexSegmentados];
-                                                    break;
-                                                case "LINFOCITOS ":
-                                                    labDia.hemograma.Linfocitos = textArray[i][valueIndexLinfocitos];
-                                                    break;
-                                                case "pH":
-                                                    labDia.gases.pH = textArray[i][valueIndex];
-                                                    break; 
-                                                case "pCO2":
-                                                    labDia.gases.pCO2 = textArray[i][valueIndex];
-                                                    break;
-                                                case "pO2":
-                                                    labDia.gases.pO2 = textArray[i][valueIndex];
-                                                    break;
-                                                case "EXCESO DE BASE":
-                                                    labDia.gases.EB = textArray[i][valueIndex];
-                                                    break;
-                                                case "HCO3":
-                                                    labDia.gases.HCO3 = textArray[i][valueIndex];
-                                                    break;
-                                                // case "HCO3 st":
-                                                //     labDia.gases.HCO3 = textArray[i][valueIndex];
-                                                //     break;
-                                                case "SODIO":
-                                                    labDia.electrolitos.Na = textArray[i][valueIndex];
-                                                    break;
-                                                case "POTASIO":
-                                                    labDia.electrolitos.K = textArray[i][valueIndex];
-                                                    break;
-                                                case "CLORO":
-                                                    labDia.electrolitos.Cl = textArray[i][valueIndex];
-                                                    break;
-                                                case "CALCIO IONICO":
-                                                    labDia.electrolitos.Ca = textArray[i][valueIndex];
-                                                    break;
-                                                case "FOSFORO":
-                                                    labDia.electrolitos.P = textArray[i][valueIndex];
-                                                    break;
-                                                case "MAGNESIO":
-                                                    labDia.electrolitos.Mg = textArray[i][valueIndex];
-                                                    break;
-                                                case "CREATININA, sangre":
-                                                    labDia.funcionRenal.Crea = textArray[i][valueIndex];
-                                                    break;
-                                                case "NITROGENO UREICO":
-                                                    labDia.funcionRenal.BUN = textArray[i][valueIndex];
-                                                    break;
-                                                case "LDH":
-                                                    labDia.otros.LDH = textArray[i][valueIndex];
-                                                    break;
-                                                case "PROTEINA C REACTIVA":
-                                                    labDia.otros.PCR = textArray[i][valueIndex];
-                                                    break;
-                                                case "TTPK":
-                                                    labDia.coagulacion.TTPK = textArray[i][valueIndex];
-                                                    break;
-                                                case "% ACTIV. DE PROTROMBINA":
-                                                    labDia.coagulacion.TP = textArray[i][valueIndex];
-                                                    break;
-                                                case "INR":
-                                                    labDia.coagulacion.INR = textArray[i][valueIndex2];
-                                                    break;
-                                                case "BILIRRUBINA TOTAL":
-                                                    labDia.funcionHepatica.BiliT = textArray[i][valueIndex];
-                                                    break;
-                                                case "BILIRRUBINA DIRECTA":
-                                                    labDia.funcionHepatica.BiliD = textArray[i][valueIndex];
-                                                    break;
-                                                case "PROTEINAS TOTALES":
-                                                    labDia.funcionHepatica.Proteinas = textArray[i][valueIndex];
-                                                    break;
-                                                case "ALBUMINA":
-                                                    labDia.funcionHepatica.Albumina = textArray[i][valueIndex];
-                                                    break;
-                                                case "GGT":
-                                                    labDia.funcionHepatica.GGT = textArray[i][valueIndex];
-                                                    break;
-                                                case "FOSFATASA ALCALINA":
-                                                    labDia.funcionHepatica.FA = textArray[i][valueIndex];
-                                                    break;
-                                                case "GPT":
-                                                    labDia.funcionHepatica.GPT = textArray[i][valueIndex];
-                                                    break;
-                                                case "GOT":
-                                                    labDia.funcionHepatica.GOT = textArray[i][valueIndex];
-                                                    break;
-                                                case "HORMONA TIROESTIMULANTE (TSH)":
-                                                    labDia.otros.TSH = textArray[i][valueIndex];
-                                                    break;
-                                                case "TIROXINA LIBRE: T4L":
-                                                    labDia.otros.T4L = textArray[i][valueIndex];
-                                                    break;
-                                                default:
-                                                    break;
-                                            }
-                                        } else {
-                                            console.log("No se encontró el valor posterior para el examen " + nombresExamenes[j] + " en la posición " + k);
-                                        }
-                                        // break;  // Exit the loop once the element is found
-                                    }
-                                }
-                            }
-
-                            
-                            console.log(labDia);
-                        }
-                        console.log(labDia);
-                        // creat div with the results inside div id primera
-                        // let div = document.createElement('div');
-                        // div.id = 'resultados';
-                        // div.innerHTML = ´>${labDia.fecha.getDay()}/}
-                        // document.getElementById('primera').appendChild(div);
-                        function formatDate(date) {
-                            return date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
-                        }
-                            
-                        function formatTime(time) {
-                            return time;
-                        }
-                            
-                            
-                        function formatSection(title, data) {
-                            
-                            // add a 0 to the right of Leucocitos value if it is a number
-                            if (data.Leucocitos != null) {
-                                data.Leucocitos = data.Leucocitos + "0";
-                            }
-                            // add a .000 to the right of  Plaquetas value if it is a number
-                            if (data.Plaquetas != null) {
-                                data.Plaquetas = data.Plaquetas + ".000";
-                            }
-                            if (data.Hto != null) {
-                                data.Hto = data.Hto + "%";
-                            }
-                            if (data.Segmentados != null) {
-                                let segmentados = data.Segmentados.replace("*", "");
-                                data.RAN = data.Leucocitos * segmentados / 100;
-                                data.RAN = data.RAN.toFixed(3);
-                                data.Segmentados = data.Segmentados + "%";
-                                let linfocitos = data.Linfocitos.replace("*", "");
-                                data.RAL = data.Leucocitos * linfocitos / 100;
-                                data.RAL = data.RAL.toFixed(3);
-                                data.Linfocitos = data.Linfocitos + "%";
-                            }
-                            if (data.TP != null) {
-                                data.TP = data.TP + "%";
-                            }
-                            if (data.TTPK != null) {
-                                data.TTPK = data.TTPK + " s";
-                            }
-                            
-                            
-                            const filteredEntries = Object.entries(data).filter(([key, value]) => value !== null);
-                            
-                            // Convert filtered entries to an array of strings
-                            
-                            const items = filteredEntries.map(([key, value]) => `${key} ${value}`).join(', ');
-                            
-                            // Return the formatted section
-                            return `- ${title}: ${items}`;
-                        }
-                        const formattedDate = formatDate(new Date(labDia.fecha));
-                        const formattedTime = formatTime(labDia.hora);
-                        let examenesStringsArray = [];
-                        examenesStringsArray.push(formatSection('Hemograma', labDia.hemograma));
-                        //examenesStringsArray.push(formatSection('Gases', labDia.gases));
-                        examenesStringsArray.push(formatSection('Función Renal', labDia.funcionRenal));
-                        examenesStringsArray.push(formatSection('Electrolitos', labDia.electrolitos));
-                        examenesStringsArray.push(formatSection('Función Hepática', labDia.funcionHepatica));
-                        examenesStringsArray.push(formatSection('Coagulación', labDia.coagulacion));
-                        examenesStringsArray.push(formatSection('Otros', labDia.otros));
-                        
-                        let finalString = `>${formattedDate} ${formattedTime}:`;
-                        //\n  ${hemogramaStr}\n  ${gasesStr}\n  ${funcionRenalStr}\n  ${electrolitosStr}`;
-                        for (let i = 0; i < examenesStringsArray.length; i++) {
-                            const element = examenesStringsArray[i];
-                            finalString += `\n ${element}`;
-                        }
-                        
-                        
-                        document.getElementById('outputDiv').textContent = finalString + "\n" ;
-                        // select text from text outputDiv and copy to clipboard
-                        document.getElementById('outputDiv').select();
-                    
                 });
             });
-        }
+        });
         
+        return formatResults(labDia);
     });
-};
-  
+}
+
+// Format lab results for display
+function formatResults(labDia) {
+    // Format values with appropriate units
+    if (labDia.hemograma.Leucocitos) labDia.hemograma.Leucocitos += "0";
+    if (labDia.hemograma.Plaquetas) labDia.hemograma.Plaquetas += ".000";
+    if (labDia.hemograma.Hto) labDia.hemograma.Hto += "%";
+    
+    if (labDia.hemograma.Segmentados) {
+        const segmentados = labDia.hemograma.Segmentados.replace("*", "");
+        labDia.hemograma.RAN = (labDia.hemograma.Leucocitos * segmentados / 100).toFixed(3);
+        labDia.hemograma.Segmentados += "%";
+        
+        const linfocitos = labDia.hemograma.Linfocitos.replace("*", "");
+        labDia.hemograma.RAL = (labDia.hemograma.Leucocitos * linfocitos / 100).toFixed(3);
+        labDia.hemograma.Linfocitos += "%";
+    }
+    
+    if (labDia.coagulacion.TP) labDia.coagulacion.TP += "%";
+    if (labDia.coagulacion.TTPK) labDia.coagulacion.TTPK += " s";
+    
+    // Format date and create output sections
+    const formattedDate = labDia.fecha.toLocaleDateString('en-GB', { 
+        day: '2-digit', month: '2-digit', year: 'numeric' 
+    });
+    
+    // Create formatted section strings
+    const formatSection = (title, data) => {
+        const items = Object.entries(data)
+            .filter(([_, value]) => value !== null)
+            .map(([key, value]) => `${key} ${value}`)
+            .join(', ');
+        return `- ${title}: ${items}`;
+    };
+    
+    // Assemble final output string
+    const sections = [
+        formatSection('Hemograma', labDia.hemograma),
+        formatSection('Función Renal', labDia.funcionRenal),
+        formatSection('Electrolitos', labDia.electrolitos),
+        formatSection('Función Hepática', labDia.funcionHepatica),
+        formatSection('Coagulación', labDia.coagulacion),
+        formatSection('Otros', labDia.otros)
+    ];
+    
+    return `>${formattedDate} ${labDia.hora}:\n ${sections.join('\n ')}`;
+}
+
+// Extract text from PDF URL
+function extractTextFromPDF() {
+    const pdfUrl = document.getElementById("pdfUrl").value;
+    pdfjsLib.getDocument(pdfUrl).promise
+        .then(processPDF)
+        .then(displayResults)
+        .catch(error => console.error("Error processing PDF:", error));
+}
+
+// Process uploaded PDF file
+function uploadPDF() {
+    const pdfFile = document.getElementById("pdfFile").files[0];
+    if (!pdfFile) return;
+    
+    const fileReader = new FileReader();
+    fileReader.onload = function(event) {
+        const typedArray = new Uint8Array(event.target.result);
+        pdfjsLib.getDocument(typedArray).promise
+            .then(processPDF)
+            .then(displayResults)
+            .catch(error => console.error("Error processing PDF:", error));
+    };
+    fileReader.readAsArrayBuffer(pdfFile);
+}
+
+// Display results in output div
+function displayResults(formattedText) {
+    document.getElementById('outputDiv').textContent = formattedText;
+}
+
+// Set up drag and drop handlers
+document.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    document.getElementById('dropOverlay').classList.add('active');
+});
+
+document.addEventListener('dragleave', function(e) {
+    if (e.target === document.body || e.clientY < 1) {
+        document.getElementById('dropOverlay').classList.remove('active');
+    }
+});
+
+document.addEventListener('drop', function(e) {
+    e.preventDefault();
+    document.getElementById('dropOverlay').classList.remove('active');
+    
+    const files = e.dataTransfer.files;
+    if (files.length > 0 && files[0].type === "application/pdf") {
+        document.getElementById('pdfFile').files = files;
+        uploadPDF();
+    }
+});
