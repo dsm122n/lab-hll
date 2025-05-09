@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Extractor de Resultados de Laboratorio</title>
+  <title>Lab de Dani</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.6.347/pdf.min.js"></script>
   <link rel="icon" type="image/png" href="icon-1.png">
   <link rel="stylesheet" href="main.css">
@@ -25,7 +25,7 @@
           <label for="pdfUrl">Ingresa la URL del PDF:</label>
           <div class="input-group">
             <input type="text" id="pdfUrl" placeholder="https://ejemplo.com/archivo.pdf" required>
-            <button id="boton" onclick="extractTextFromPDF()">Procesar PDF</button>
+            <button id="boton" onclick="extractTextFromPDF()">Do or do not, there is no try</button>
           </div>
         </div>
       </div>
@@ -34,7 +34,7 @@
         <div class="form">
           <label for="pdfFile">Selecciona o arrastra un archivo PDF:</label>
           <input type="file" name="pdfFile" id="pdfFile" class="file-input" accept=".pdf">
-          <button onclick="uploadPDF()">Procesar PDF</button>
+          <button onclick="uploadPDF()">Do or do not, there is no try</button>
         </div>
       </div>
       
@@ -48,7 +48,14 @@
     </div>
   </div>
   
-  <div id="dropOverlay" class="drop-overlay">📄 Suelta aquí tu archivo PDF</div>
+  <div id="dropOverlay" class="drop-overlay">
+
+    <p style="font-size: smaller;">
+      
+      Train yourself to let go of everything you fear to lose.
+    </p>
+
+  </div>
   <div id="toast" class="toast">Copiado al portapapeles</div>
 
   <script>
