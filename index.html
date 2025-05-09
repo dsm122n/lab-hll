@@ -2,34 +2,95 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Extractor de PDF de Laboratorio</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Extractor de Resultados de Laboratorio</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.6.347/pdf.min.js"></script>
-    <link rel="icon" type="image/png" href="icon-1.png">
+  <link rel="icon" type="image/png" href="icon-1.png">
   <link rel="stylesheet" href="main.css">
 </head>
 <body>
+  <img src="background.jpeg" alt="Background" class="background-image">
+  
+  <div class="container-master">
+    <div class="container">
+      <h1>📄 Extractor de Resultados de Laboratorio</h1>
+      
+      <div class="tabs">
+        <button class="tab-button active" onclick="switchTab('urlTab', this)">URL del PDF</button>
+        <button class="tab-button" onclick="switchTab('fileTab', this)">Archivo PDF</button>
+      </div>
+      
+      <div id="urlTab" class="tab-content active">
+        <div class="form">
+          <label for="pdfUrl">Ingresa la URL del PDF:</label>
+          <div class="input-group">
+            <input type="text" id="pdfUrl" placeholder="https://ejemplo.com/archivo.pdf" required>
+            <button id="boton" onclick="extractTextFromPDF()">Procesar PDF</button>
+          </div>
+        </div>
+      </div>
+      
+      <div id="fileTab" class="tab-content">
+        <div class="form">
+          <label for="pdfFile">Selecciona o arrastra un archivo PDF:</label>
+          <input type="file" name="pdfFile" id="pdfFile" class="file-input" accept=".pdf">
+          <button onclick="uploadPDF()">Procesar PDF</button>
+        </div>
+      </div>
+      
+      <div class="output-container">
+        <div class="output-header">
+          <h3>Resultados</h3>
+          <button id="copyButton" onclick="copyToClipboard()" class="copy-button">Copiar</button>
+        </div>
+        <textarea id="outputDiv" class="output" readonly></textarea>
+      </div>
+    </div>
+  </div>
+  
+  <div id="dropOverlay" class="drop-overlay">📄 Suelta aquí tu archivo PDF</div>
+  <div id="toast" class="toast">Copiado al portapapeles</div>
 
-        <img src="background.jpeg" alt="Background" class="background-image">
-        <div class="container-master">
-            <div class="container">
-                <h1>📄 Extractor de Resultados de Laboratorio</h1>
-        
-                <div id="pdfForm" class="form">
-                <label for="pdfUrl">Ingresa la URL del PDF:</label>
-                <input type="text" id="pdfUrl" placeholder="https://ejemplo.com/archivo.pdf" required>
-                <button id="boton" onclick="extractTextFromPDF()">Do or do not, there is no try</button>
-                <input type="file" name="pdfFile" id="pdfFile" class="file-input" accept=".pdf">
-                <button onclick="uploadPDF()">Upload PDF</button>
-                </div>
-        
-                <textarea id="outputDiv" class="output">
-        
-                </textarea>
-             </div>
-             
-             <div id="dropOverlay" class="drop-overlay">📄 Suelta aquí tu archivo PDF</div>
-            </div>
-
+  <script>
+    // Initialize PDF.js
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.6.347/pdf.worker.min.js';
+    
+    // Tab switching functionality
+    function switchTab(tabId, buttonElement) {
+      // Hide all tab contents
+      document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      
+      // Deactivate all tab buttons
+      document.querySelectorAll('.tab-button').forEach(button => {
+        button.classList.remove('active');
+      });
+      
+      // Show selected tab content
+      document.getElementById(tabId).classList.add('active');
+      
+      // If a button element was provided, activate it
+      if (buttonElement) {
+        buttonElement.classList.add('active');
+      } else {
+        // Otherwise find the button that corresponds to this tab and activate it
+        document.querySelector(`.tab-button[onclick*="${tabId}"]`).classList.add('active');
+      }
+    }
+    
+    // Copy results to clipboard
+    function copyToClipboard() {
+      const outputText = document.getElementById('outputDiv');
+      outputText.select();
+      document.execCommand('copy');
+      
+      // Show toast notification
+      const toast = document.getElementById('toast');
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+  </script>
   <script src="index.js"></script>
 </body>
 </html>
