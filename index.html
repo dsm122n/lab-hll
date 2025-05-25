@@ -16,11 +16,11 @@
       <h1>📄 Extractor de Resultados de Laboratorio</h1>
       
       <div class="tabs">
-        <button class="tab-button active" onclick="switchTab('urlTab', this)">URL del PDF</button>
-        <button class="tab-button" onclick="switchTab('fileTab', this)">Archivo PDF</button>
+        <!-- <button class="tab-button active" onclick="switchTab('urlTab', this)">URL del PDF</button> -->
+        <button class="tab-button active" onclick="switchTab('fileTab', this)">Archivo PDF</button>
       </div>
       
-      <div id="urlTab" class="tab-content active">
+      <!-- <div id="urlTab" class="tab-content">
         <div class="form">
           <label for="pdfUrl">Ingresa la URL del PDF:</label>
           <div class="input-group">
@@ -28,9 +28,9 @@
             <button id="boton" onclick="extractTextFromPDF()">Do or do not, there is no try</button>
           </div>
         </div>
-      </div>
+      </div> -->
       
-      <div id="fileTab" class="tab-content">
+      <div id="fileTab" class="tab-content active">
         <div class="form">
           <label for="pdfFile">Selecciona o arrastra un archivo PDF:</label>
           <input type="file" name="pdfFile" id="pdfFile" class="file-input" accept=".pdf">
@@ -39,11 +39,21 @@
       </div>
       
       <div class="output-container">
-        <div class="output-header">
-          <h3>Resultados</h3>
-          <button id="copyButton" onclick="copyToClipboard()" class="copy-button">Copiar</button>
+        <div class="output-block">
+          <div class="output-header">
+            <h3>Lista</h3>
+            <button id="copyButton" class="copy-button">Copiar</button>
+          </div>
+          <textarea id="outputDivLista" class="output"></textarea>
+
         </div>
-        <textarea id="outputDiv" class="output" readonly></textarea>
+        <div class="output-block">
+          <div class="output-header">
+            <h3>Lineal</h3>
+            <button id="copyButtonLineal" class="copy-button">Copiar</button>
+          </div>
+          <textarea id="outputDivLineal" class="output"></textarea>
+
       </div>
     </div>
   </div>
@@ -86,13 +96,24 @@
       }
     }
     
-    // Copy results to clipboard
-    function copyToClipboard() {
-      const outputText = document.getElementById('outputDiv');
+    // For the first copy button (lista format)
+    document.getElementById('copyButton').addEventListener('click', function() {
+      const outputText = document.getElementById('outputDivLista');
       outputText.select();
       document.execCommand('copy');
-      
-      // Show toast notification
+      showToast();
+    });
+    
+    // For the second copy button (lineal format)
+    document.getElementById('copyButtonLineal').addEventListener('click', function() {
+      const outputText = document.getElementById('outputDivLineal');
+      outputText.select();
+      document.execCommand('copy');
+      showToast();
+    });
+    
+    // Show toast notification
+    function showToast() {
       const toast = document.getElementById('toast');
       toast.classList.add('show');
       setTimeout(() => toast.classList.remove('show'), 3000);

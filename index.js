@@ -145,7 +145,35 @@ class LabResults {
       return items ? `- ${CATEGORIES[category]}: ${items}` : null;
     }).filter(Boolean);
     
-    return `>${formattedDate} ${this.time}:\n ${sections.join('\n ')}`;
+    return `${formattedDate} ${this.time}:\n ${sections.join('\n ')}`;
+  }
+  /**
+   * Format the lab results as a linear string without category headers
+   * @returns {string} Formatted lab results in linear format
+   */
+  formatResultsLineal() {
+    // Format date for display
+    const formattedDate = this.date.toLocaleDateString('en-GB', { 
+      day: '2-digit', month: '2-digit', year: 'numeric' 
+    });
+    
+    // Collect all values from all categories
+    const allValues = [];
+    
+    // Process each category
+    Object.keys(CATEGORIES).forEach(category => {
+      const data = this[category];
+      
+      // Add all values from this category
+      Object.entries(data)
+        .filter(([_, value]) => value !== null && value !== undefined)
+        .forEach(([key, value]) => {
+          allValues.push(`${key} ${value}`);
+        });
+    });
+    
+    // Join all values with commas
+    return `${formattedDate} ${this.time}:\n ${allValues.join(', ')}`;
   }
 }
 
@@ -181,7 +209,10 @@ function processPDF(pdf) {
     labResults.calculateDerivedValues();
     
     // Return formatted results
-    return labResults.formatResults();
+    return {
+      lista: labResults.formatResults(),
+      lineal: labResults.formatResultsLineal()
+    };
   });
 }
 
@@ -282,8 +313,9 @@ function uploadPDF() {
  * Shows loading indicator
  */
 function showLoadingIndicator() {
-  document.getElementById('outputDiv').textContent = "Procesando PDF...";
-  document.getElementById('boton').disabled = true;
+  document.getElementById('outputDivLineal').textContent = "Procesando PDF...";
+  document.getElementById('outputDivLista').textContent = "Procesando PDF...";
+  // document.getElementById('boton').disabled = true;
 }
 
 /**
@@ -299,15 +331,16 @@ function hideLoadingIndicator() {
  */
 function handleError(error) {
   console.error("Error processing PDF:", error);
-  document.getElementById('outputDiv').textContent = "Error al procesar el PDF: " + error.message;
+  document.getElementById('outputDivLista').textContent = "Error al procesar el PDF: " + error.message;
 }
 
 /**
- * Displays results in output div
- * @param {string} formattedText - Formatted lab results text
+ * Displays results in output divs
+ * @param {Object} results - Object containing formatted text results
  */
-function displayResults(formattedText) {
-  document.getElementById('outputDiv').textContent = formattedText;
+function displayResults(results) {
+  document.getElementById('outputDivLista').textContent = results.lista;
+  document.getElementById('outputDivLineal').textContent = results.lineal;
 }
 
 // Set up event listeners once the DOM is loaded
@@ -316,11 +349,11 @@ document.addEventListener('DOMContentLoaded', function() {
   setupDragAndDrop();
   
   // Add keyboard shortcut for URL input
-  document.getElementById('pdfUrl').addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') {
-      extractTextFromPDF();
-    }
-  });
+  // document.getElementById('pdfUrl').addEventListener('keypress', function(e) {
+  //   if (e.key === 'Enter') {
+  //     extractTextFromPDF();
+  //   }
+  // });
 });
 
 /**
